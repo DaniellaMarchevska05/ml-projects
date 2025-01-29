@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.*models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
@@ -11,10 +11,9 @@ import matplotlib.pyplot as plt
 # Get project files
 !wget https://cdn.freecodecamp.org/project-data/cats-and-dogs/cats_and_dogs.zip
 
-!unzip cats_and_dogs.zip*
+!unzip cats_and_dogs.zip
 
 PATH = 'cats_and_dogs'
-
 train_dir = os.path.join(PATH, 'train')
 validation_dir = os.path.join(PATH, 'validation')
 test_dir = os.path.join(PATH, 'test')
@@ -97,7 +96,8 @@ train_image_generator = ImageDataGenerator(
     shear_range=0.2,
     zoom_range=0.2,
     horizontal_flip=True,
-    fill_mode='nearest')
+    fill_mode='nearest'
+)
 # 6
 train_data_gen = train_image_generator.flow_from_directory(batch_size=batch_size,
                                                      directory=train_dir,
@@ -127,5 +127,57 @@ model.compile(optimizer='adam',
               metrics=['accuracy'])
 
 model.summary()
-# 8
+# 8 train the model
 history = model.fit(x=train_data_gen, steps_per_epoch=total_train//batch_size, epochs=epochs, validation_data=val_data_gen, validation_steps=total_val//batch_size)
+
+# 9
+acc = history.history['accuracy']
+val_acc = history.history['val_accuracy']
+
+loss = history.history['loss']
+val_loss = history.history['val_loss']
+
+epochs_range = range(epochs)
+
+plt.figure(figsize=(8, 8))
+plt.subplot(1, 2, 1)
+plt.plot(epochs_range, acc, label='Training Accuracy')
+plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+plt.legend(loc='lower right')
+plt.title('Training and Validation Accuracy')
+
+plt.subplot(1, 2, 2)
+plt.plot(epochs_range, loss, label='Training Loss')
+plt.plot(epochs_range, val_loss, label='Validation Loss')
+plt.legend(loc='upper right')
+plt.title('Training and Validation Loss')
+plt.show()
+
+# 11
+answers =  [1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0,
+            1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0,
+            1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1,
+            1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1,
+            0, 0, 0, 0, 0, 0]
+
+#10
+test_images, _ = next(iter(test_data_gen))
+probabilities = model.predict(test_images)
+plotImages(test_images[:len(answers)], probabilities[:len(answers)])
+
+correct = 0
+
+for probability, answer in zip(probabilities, answers):
+  if round(probability) == answer:
+    correct +=1
+
+percentage_identified = (correct / len(answers)) * 100
+
+passed_challenge = percentage_identified >= 63
+
+print(f"Your model correctly identified {round(percentage_identified, 2)}% of the images of cats and dogs.")
+
+if passed_challenge:
+  print("You passed the challenge!")
+else:
+  print("You haven't passed yet. Your model should identify at least 63% of the images. Keep trying. You will get it!")
